@@ -1,46 +1,71 @@
-% I have to manually implement subset because it is not recursive in
-% SWIPL
-subsett([], []).
-subsett([E|Tail], [E|NTail]):-
-  subsett(Tail, NTail).
-subsett([_|Tail], NTail):-
-  subsett(Tail, NTail).
 
-% Has this list repeated elements?
-norep([]).
-norep([L]) :-
-  atomic(L),!.
+%Escribe otro que elimina las repeticiones:
+%?- flattenNoRepetitions( [a,[b,c,[b,b],e], f], L).
+%L = [a,b,c,e,f]
+flattenNoRepetitions([],[]).
 
-norep([A|L]) :-
-  % A should not be a member of L
-  \+ member(A, L),
-  norep(L),!.
+flattenNoRepetitions([X|L1], F):-
+    flattenNoRepetitions(L1,L2), %recursividad.
+    incluir(X,L2,F).
 
-% First list contains all elements of
-% second list
-containselems([], []).
+%FUNCIONES AUXILIARES-----------------------------------------------------------
 
-containselems([A|B], L) :-
-  member(A, L),
-  subtract(L, [A], Z),
-  containselems(B, Z).
+%incluir(Elemento/Lista, Lista, Lista final)
+% El elemento/los elementos se incluye en la lista final si no se encuentra en la lista
 
-% Is L1 a subset that contains all elements of L
-% and has no repetitions?
-setnorep(L, L1) :-
-  subsett(L, L1),
-  containselems(L1, L),
-  norep(L1).
+%Caso A: Es elemento y se ya esta en la lista
+incluir(X,L2, L2):-
+    \+isList(X),
+    containsElement(X,L2). %
 
-flattenNoRepetitions([], []).
+%Caso B: Es elemento y no esta en la lista
+incluir(X,L2, [X|L2]):-
+    \+isList(X),
+    \+containsElement(X,L2).
 
-flattenNoRepetitions([A|B], Z) :-
-  atomic(A),
-  flattenNoRepetitions(B, C),
-  setnorep([A|C], Z),!.
+%Caso C: Es una lista se   mira de incluir la lista
+incluir(X,L2, F):-
+    isList(X),
+    flattenNoRepetitions(X, L1),
+    concatenarNoRep(L1,L2,F).
+%___________________________________
 
-flattenNoRepetitions([A|B], Z) :-
-  flattenNoRepetitions(A, L1),
-  flattenNoRepetitions(B, L2),
-  append(L1, L2, C),
-  setnorep(C, Z),!.
+%noRep(Lista,Lista)
+%Dada una lista devuelve otra lista con los mismo elementos pero no repetidos
+noRep([],[]).
+noRep([X],[X]).
+
+noRep([X|L],F):-
+    containsElement(X,L),
+    noRep(L,F).
+
+noRep([X|L],[X|F]):-
+    \+containsElement(X,L),
+    noRep(L,F).
+%________________________________
+
+%concatenarNoRep(Lista1,Lista2, Lista1·Lista2)
+%concatenacion de dos listas sin repeticion de elementos
+concatenarNoRep([],[],[]).
+concatenarNoRep(L,[],F):- noRep(L,F).
+concatenarNoRep([],L,F):- noRep(L,F).
+
+concatenarNoRep( [X|L1], L2, F):- %Elemento X esta en L2
+    containsElement(X,L2),
+    concatenarNoRep(L1,L2,F).
+
+concatenarNoRep( [X |L1], L2, [X|F]):- %Elemento no esta en L2
+    \+containsElement(X,L2),
+    concatenarNoRep(L1,L2,F).
+%___________________________________
+
+%containsElement(Element,Lista)
+%Es cierto si la lista contiene el elemento X
+containsElement(X, [X|_]).
+containsElement(X, [Y|L]):-
+        X \= Y,
+        containsElement(X,L).
+%___________________________________
+
+isList([_|_]).
+isList([]).
