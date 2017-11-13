@@ -66,10 +66,13 @@ hourInRange(Start,End,H):- Start>End, End1 is End+24-1, between(Start,End1,H1), 
 
 writeClauses:-
     fillInput, %Input deja las horas que no se puede trabajar
-    workingHours,
-    eachNHexactlyOneS, %Para cada enfermera y hora, exactamente 1 startsNH-N-H.
     eachNexaclyOneT,   %Para cada enfermera exactamente tiene 1 tipo de horario
-    eachHatLeastMinK,  %Para cada H al menos K enfermeras.
+    eachNHexactlyOneS, %Para cada enfermera y hora, exactamente 1 startsNH-N-H.
+    eachNifStartsWork,
+    %workingHours,
+
+
+    %eachHatLeastMinK,  %Para cada H al menos K enfermeras.
     %eachNMax6Hour,
     true.
 
@@ -78,17 +81,27 @@ writeClauses:-
 % =====================================================================
 
 fillInput:-
-  hour(H1),
   nurseIDandBlocking(N,Hi,Hf),
   hourInRange(Hi,Hf,H1),
-  writeClause([\+startsNH-N-H1, \+worksNH-N-H1]),
+  writeClause([\+startsNH-N-H1]),
+  writeClause([\+worksNH-N-H1]),
   fail.
 fillInput.
 
 %Para cada enfermera exactamente 1 start
 eachNHexactlyOneS:-
-  nurse(N),hour(H), findall(startsNH-N-H,nurse(N),Lits), exactly(1,Lits), fail.
+  nurse(N),
+  findall(startsNH-N-H,hour(H),Lits),
+  atMost(1,Lits),
+  fail.
 eachNHexactlyOneS.
+
+eachNifStartsWork:-
+  nurse(N),
+  hour(H),
+  writeClause([\+startsNH-N-H, worksNH-N-H]),   %p->q => ¬p v q
+  fail.
+eachNifStartsWork.
 
 eachNexaclyOneT:-
   nurse(N),findall(nurseType-N-Type,type(Type),Lits), exactly(1,Lits),fail.
@@ -105,12 +118,14 @@ workingHours:-
   hour(StartH),
   StartH =< H,
   workingHourForTypeAndStartH(Type,StartH,H),
-  writeClause([startsNH-N-StartH,nurseType-N-Type,worksNH-N-H]), fail.
+  writeClause([startsNH-N-StartH]),
+  writeClause([nurseType-N-Type]),
+  writeClause([worksNH-N-H]), fail.
 workingHours.
 
 eachNMax6Hour:-
-  nurse(N),
-  findall(worksNH-N-H,hour(H),Lits), exactly(6,Lits),fail.
+  hour(H),
+  findall(worksNH-N-H,nurse(N),Lits), exactly(6,Lits),fail.
 eachNMax6Hour.
 
 
@@ -121,7 +136,7 @@ displaySol(M):- nl,write('       00-01-02-03-04-05-06-07-08-09-10-11-12-13-14-15
                 nurse(N), format('~n~s:',[N]), hour(H), writeHour(M,N,H), fail.
 displaySol(M):- nl,write('Total:  '),hour(H),findall(N,member(worksNH-N-H,M),L),length(L,K),format(' ~d ',[K]),fail.
 displaySol(_):- nl,write('Needed: '),hour(H),needed(H,N),                                   format(' ~d ',[N]),fail.
-displaySol(M):- nl,write('Type:   '),hour(H),needed(H,N),findall(N,member(nurseType-N-Type,M),L), format(' ~d ',[L]),fail.
+displaySol(M):- nl,write('Type:   '),hour(H),needed(H,N),findall(N,member(nurseType-N-_,M),L), format(' ~d ',[L]),fail.
 displaySol(_).
 
 writeHour(M,N,H):- member(worksNH-N-H,M), write(' X '),!.

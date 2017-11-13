@@ -57,7 +57,68 @@ hourInRange(Start,End,H):- Start>End, End1 is End+24-1, between(Start,End1,H1), 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 writeClauses:-
-    ...
+    %Initial constraints
+    blockedHours,
+
+    %Constraints
+    eachNexaclyOneS,
+    %eachNexaclyOneT,
+    eachHatLeastMinK,
+
+    %Fill works
+    fillWorks,
+    true.
+
+blockedHours:-
+  nurseIDandBlocking(N,Hi,Hf),
+  hourInRange(Hi,Hf,H),
+  writeClause([\+startsNH-N-H]),
+  writeClause([\+worksNH-N-H]),
+  fail.
+blockedHours.
+
+eachNexaclyOneS:-
+  nurse(N),
+  findall(startsNH-N-H,hour(H),Lits),
+  exactly(1,Lits),
+  fail.
+eachNexaclyOneS.
+
+eachNexaclyOneT:-
+  nurse(N),
+  findall(nurseType-N-Type,type(Type),Lits),
+  exactly(1,Lits),
+  fail.
+eachNexaclyOneT.
+
+eachHatLeastMinK:-
+  needed(H,K),
+  findall(worksNH-N-H,nurse(N),Lits),
+  atLeast(K,Lits),
+  fail.
+eachHatLeastMinK.
+
+fillWorks:-
+    inicioTrabajo,
+    llenarTrabajoSegunTipo,
+    fail.
+fillWorks.
+
+inicioTrabajo:-
+  nurse(N),
+  hour(H),
+  %p -> q = ¬pvq.
+  writeClause([\+startsNH-N-H,worksNH-N-H]),
+  workingHourForTypeAndStartH(Type,H,HF),
+  llenarTrabajoSegunTipo(N,Type,hH),
+  fail.
+inicioTrabajo.
+
+llenarTrabajoSegunTipo:-
+
+  fail.
+llenarTrabajoSegunTipo.
+
 
 % =====================================================================
 
