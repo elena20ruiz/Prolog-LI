@@ -15,3 +15,6 @@ packing: packing.pl
 
 gangsters: gangsters.pl
 	swipl -quiet -O -g main --stand_alone=true -o gangsters  -c gangsters.pl
+
+clean: 
+	rm -r clauses header model nurses sudoku
