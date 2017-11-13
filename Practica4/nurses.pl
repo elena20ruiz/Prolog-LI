@@ -62,11 +62,12 @@ writeClauses:-
 
     %Constraints
     eachNexaclyOneS,
-    %eachNexaclyOneT,
+    eachNexaclyOneT,
     eachHatLeastMinK,
 
     %Fill works
     fillWorks,
+    restHours,
     true.
 
 blockedHours:-
@@ -99,26 +100,24 @@ eachHatLeastMinK:-
 eachHatLeastMinK.
 
 fillWorks:-
-    inicioTrabajo,
-    llenarTrabajoSegunTipo,
+    nurse(N),
+    hour(StartH),
+    hour(H),
+    type(Type),
+    workingHourForTypeAndStartH(Type,StartH,H),
+    writeClause([\+startsNH-N-StartH,\+nurseType-N-Type,worksNH-N-H]),
     fail.
 fillWorks.
 
-inicioTrabajo:-
-  nurse(N),
-  hour(H),
-  %p -> q = ¬pvq.
-  writeClause([\+startsNH-N-H,worksNH-N-H]),
-  workingHourForTypeAndStartH(Type,H,HF),
-  llenarTrabajoSegunTipo(N,Type,hH),
-  fail.
-inicioTrabajo.
-
-llenarTrabajoSegunTipo:-
-
-  fail.
-llenarTrabajoSegunTipo.
-
+restHours:-
+    nurse(N),
+    hour(StartH),
+    hour(H),
+    type(Type),
+    \+workingHourForTypeAndStartH(Type,StartH,H),
+    writeClause([\+startsNH-N-StartH,\+nurseType-N-Type,\+worksNH-N-H]),
+    fail.
+restHours.
 
 % =====================================================================
 
