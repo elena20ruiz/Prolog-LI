@@ -164,22 +164,76 @@ esta_ordenada([X|L]):-
 	write("yes").
 
 %12. --------------------------------------------------------------------
-ordenacion(L1,L2) :- permutacion(L1,L2), esta_ordenada(L2).
+%ordenacion(L1,L2) :- permutacion(L1,L2), esta_ordenada(L2).
 
 %13. --------------------------------------------------------------------
 
 %14. --------------------------------------------------------------------
 
+
+
+%AUX- Insercion
+
+insercion(X,[],[X]).
+insercion(X, [Y|L], [X,Y|L]):- X =< Y.    
+insercion(X, [Y|L], [Y|L2]):- X >Y, insercion(X,L,L2).
+
+ordenacion([],[]).
+ordenacion([X|L],L1):- ordenacion(L,L2), insercion(X,L2,L1).
+    
+
 %15. --------------------------------------------------------------------
 
 %16. --------------------------------------------------------------------
+ordenacion_merge([],[]).                    %Ningun elemento
+ordenacion_merge([X],[X]).                  % 1 elemento
+
+ordenacion_merge(L,F):-                     % +2 elementos  
+    length(L,N),
+    midaValida(N1,N2,N),
+    length(M1,N1),
+    length(M2,N2),
+    concat(M1,M2,L), 
+    ordenacion_merge(M1, R1),
+    ordenacion_merge(M2, R2),
+    fusion(R1,R2,F).
+
+
+midaValida(N1,N2,N):- 
+    N1 is N//2 + N mod 2,
+    N2 is N//2.
+
+fusion([X|L1],[Y|L2], [X|L]):-
+    X =< Y,
+    fusion(L1,[Y|L2],L).
+
+fusion([X|L1],[Y|L2], [Y|L]):-
+    X > Y,
+    fusion([X|L1],L2,L).
+    
+fusion([X|L],[],[X|L]).
+fusion([],[X|L],[X|L]).
+    
 
 %17. --------------------------------------------------------------------
 
+%Alfabeto A, natural N
+%   //TODO
+diccionario(A,N):-  nperts(A,N,S), escribir(S), fail.
+
+nperts(_,0,[]):-!.
+nperts(L,N,[X|S]):- pert(X,L), N1 is N-1, nperts(L,N1,S).
+
+escribir([]):-write(' '),nl,!.
+escribir([X|L]):- write(X), escribir(L).
+
+
 %18. --------------------------------------------------------------------
 
-%19. --------------------------------------------------------------------
+palindromos(L) :- permutacion(L,P), es_palindromo(P), 
+  write(P), nl, fail. 
+palindromos(_). 
 
-%20. --------------------------------------------------------------------
-
-%21. --------------------------------------------------------------------
+es_palindromo([]).
+es_palindromo([_]) :- !. % regla adecuada
+es_palindromo([X|L]) :- concat(L1,[X],L), es_palindromo(L1). 
