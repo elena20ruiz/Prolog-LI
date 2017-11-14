@@ -14,7 +14,7 @@
 lastEnd([end]).
 lastEnd([_|Z]) :- lastEnd(Z).
 
-variable(x).
+variable(x).ardill
 variable(y).
 variable(z).
 
@@ -27,7 +27,7 @@ instruccion([V0|L]):- variable(V0),
 		      append([V2],L4,L3),
 		      variable(V2),
 		      (append([;],L5,L4) -> instruccion(L5);true).
-		      
+
 
 instruccion(["if"|L]) :- L = [V0|L1],
 			variable(V0),
@@ -35,8 +35,8 @@ instruccion(["if"|L]) :- L = [V0|L1],
 			L2 = [V1|L3],
 			variable(V1),
 			append([then], L4, L3),
-			instruccions(L4). 
+			instruccions(L4).
 
-programa([begin|L]) :- 
+programa([begin|L]) :-
 			 lastEnd(L),
 			 instruccion(L).

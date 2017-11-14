@@ -10,7 +10,7 @@ side(N, N1) :-
 side(N, N1) :-
   incr(N, N1).
 
-casas:-	
+casas:-
   Sol = [
     [1,A1,B1,C1,D1,E1],
     [2,A2,B2,C2,D2,E2],
@@ -18,7 +18,7 @@ casas:-
     [4,A4,B4,C4,D4,E4],
     [5,A5,B5,C5,D5,E5]
   ],
-% member( [ n, c, p, a, b, p ]  , Sol),
+  % member( [ n, c, p, a, b, p ]  , Sol),
   member( [ _, "roja", _, _, _, "Perú" ]  , Sol),
   member( [ _, _, _, "perro", _, "Francia" ]  , Sol),
   member( [ _, _, "pintor", _, _, "Japón" ]  , Sol),

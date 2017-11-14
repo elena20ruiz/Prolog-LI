@@ -1,19 +1,17 @@
-symbolicOutput(0). % set to 1 to see symbolic output only; 0 otherwise.
+:-dynamic(varNumber / 3).
+symbolicOutput(0).  % set to 1 to see symbolic output only; 0 otherwise.
 
-%%%%%%%%%%%%%%%%%%%%% toy input example:
+entrada([ [-,4,-,  -,-,-,  -,1,-],          % 6 4 3  9 7 5  2 1 8
+          [-,-,8,  -,3,-,  9,-,-],          % 2 7 8  4 3 1  9 5 6
+          [-,-,-,  6,8,2,  -,-,-],          % 5 1 9  6 8 2  3 4 7
 
-                                            % SOLUCION ES:
-entrada([ [-,4,-,  -,-,-,  -,1,-],          % 6 4 3  9 7 5  2 1 8 
-          [-,-,8,  -,3,-,  9,-,-],          % 2 7 8  4 3 1  9 5 6 
-          [-,-,-,  6,8,2,  -,-,-],          % 5 1 9  6 8 2  3 4 7 
+          [3,2,-,  -,6,-,  -,7,9],          % 3 2 5  8 6 4  1 7 9
+          [-,-,7,  -,-,-,  4,-,-],          % 1 8 7  3 5 9  4 6 2
+          [9,6,-,  -,1,-,  -,8,3],          % 9 6 4  2 1 7  5 8 3
 
-          [3,2,-,  -,6,-,  -,7,9],          % 3 2 5  8 6 4  1 7 9 
-          [-,-,7,  -,-,-,  4,-,-],          % 1 8 7  3 5 9  4 6 2 
-          [9,6,-,  -,1,-,  -,8,3],          % 9 6 4  2 1 7  5 8 3 
-
-          [-,-,-,  7,9,8,  -,-,-],          % 4 5 2  7 9 8  6 3 1 
-          [-,-,1,  -,2,-,  7,-,-],          % 8 3 1  5 2 6  7 9 4 
-          [-,9,-,  -,-,-,  -,2,-] ]).       % 7 9 6  1 4 3  8 2 5 
+          [-,-,-,  7,9,8,  -,-,-],          % 4 5 2  7 9 8  6 3 1
+          [-,-,1,  -,2,-,  7,-,-],          % 8 3 1  5 2 6  7 9 4
+          [-,9,-,  -,-,-,  -,2,-] ]).       % 7 9 6  1 4 3  8 2 5
 
 %%%%%% Some helpful definitions to make the code cleaner:
 row(I):-between(1,9,I).
@@ -22,9 +20,10 @@ val(K):-between(1,9,K).
 blockID(Iid,Jid):- member(Iid,[0,1,2]), member(Jid,[0,1,2]).  %there are 9 blocks: 0-0, 1-0, ... ,2-2
 squareOfBlock( Iid,Jid, I,J ):- row(I), col(J),  Iid is (I-1) // 3,  Jid is (J-1) // 3.
 
-%%%%%%  Variables are x-i-j-k: "square IJ gets value K" 1<=i,j,k<=9.  9^3=729 variables
+%%%%%%  Variables:
+% x-i-j-k meaning "square IJ gets value K",    1<=i<=9, 1<=j<=9, 1<=k<=9   9^3= 729 variables
 
-writeClauses:- 
+writeClauses:-
     filledInputValues,         % for each filled-in value of the input, add a unit clause
     eachIJexactlyOneK,         % each square IJ gets exactly one value K
     eachJKexactlyOneI,         % each column J each value K in exactly one row I
@@ -44,12 +43,12 @@ eachJKexactlyOneI.
 eachIKexactlyOneJ:- row(I), val(K), findall( x-I-J-K, col(J), Lits ), exactly(1,Lits), fail.
 eachIKexactlyOneJ.
 
-eachBlockEachKexactlyOnce:- blockID(Iid,Jid), 
+eachBlockEachKexactlyOnce:- blockID(Iid,Jid),
         val(K), findall( x-I-J-K, squareOfBlock(Iid,Jid,I,J), Lits ), exactly(1,Lits), fail.
 eachBlockEachKexactlyOnce.
 
 %%%%%%%%%%%%%%%%%%%%%%%
-%%%%%% show the solution. Here M contains the literals x-I-J-K that are true in the model:
+%%%%%% show the solution. Here M contains the literals that are true in the model:
 
 displaySol(M):- nl, row(I), nl, line(I), col(J), space(J), member(x-I-J-K, M ), write(K), write(' '), fail.
 displaySol(_):- nl,nl.
@@ -59,24 +58,31 @@ line(_).
 space(J):-member(J,[4,7]), write(' '),!.
 space(_).
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Everything below is given as a standard library, reusable for solving 
+% Everything below is given as a standard library, reusable for solving
 %    with SAT many different problems.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Express that Var is equivalent to the disjunction of Lits:
+expressOr( Var, Lits ):- member(Lit,Lits), negate(Lit,NLit), writeClause([ NLit, Var ]), fail.
+expressOr( Var, Lits ):- negate(Var,NVar), writeClause([ NVar | Lits ]),!.
+
+
 %%%%%% Cardinality constraints on arbitrary sets of literals Lits:
-% For example the following generates the clauses expressing that 
-%     exactly K literals of the list Lits are true:
+
 exactly(K,Lits):- atLeast(K,Lits), atMost(K,Lits),!.
 
 atMost(K,Lits):-   % l1+...+ln <= k:  in all subsets of size k+1, at least one is false:
-    negateAll(Lits,NLits), 
-    K1 is K+1,    subsetOfSize(K1,NLits,Clause), writeClause(Clause),fail.
+	negateAll(Lits,NLits),
+	K1 is K+1,    subsetOfSize(K1,NLits,Clause), writeClause(Clause),fail.
 atMost(_,_).
 
 atLeast(K,Lits):-  % l1+...+ln >= k: in all subsets of size n-k+1, at least one is true:
-    length(Lits,N),
-    K1 is N-K+1,  subsetOfSize(K1, Lits,Clause), writeClause(Clause),fail.
+	length(Lits,N),
+	K1 is N-K+1,  subsetOfSize(K1, Lits,Clause), writeClause(Clause),fail.
 atLeast(_,_).
 
 negateAll( [], [] ).
@@ -89,37 +95,29 @@ subsetOfSize(0,_,[]):-!.
 subsetOfSize(N,[X|L],[X|S]):- N1 is N-1, length(L,Leng), Leng>=N1, subsetOfSize(N1,L,S).
 subsetOfSize(N,[_|L],   S ):-            length(L,Leng), Leng>=N,  subsetOfSize( N,L,S).
 
-% Express that Var is equivalent to the disjunction of Lits:
-expressOr( Var, Lits ):- member(Lit,Lits), negate(Lit,NLit), writeClause([ NLit, Var ]), fail.
-expressOr( Var, Lits ):- negate(Var,NVar), writeClause([ NVar | Lits ]),!.
-
-% Express that Var is equivalent to the conjunction of Lits:
-expressAnd( Var, Lits ):- negate(Var,NVar), member(Lit,Lits),  writeClause([ NVar, Lit ]), fail.
-expressAnd( Var, Lits ):- negateAll(Lits,NLits), writeClause([ Var | NLits ]),!.
-
 
 %%%%%% main:
 
 main:-  symbolicOutput(1), !, writeClauses, halt.   % print the clauses in symbolic form and halt
 main:-  initClauseGeneration,
-        tell(clauses), writeClauses, told,          % generate the (numeric) SAT clauses and call the solver
-	tell(header),  writeHeader,  told,
-	numVars(N), numClauses(C),
-	write('Generated '), write(C), write(' clauses over '), write(N), write(' variables. '),nl,
-	shell('cat header clauses > infile.cnf',_),
-	write('Calling solver....'), nl, 
-	shell('picosat -v -o model infile.cnf', Result),  % if sat: Result=10; if unsat: Result=20.
+tell(clauses), writeClauses, told,          % generate the (numeric) SAT clauses and call the solver
+tell(header),  writeHeader,  told,
+numVars(N), numClauses(C),
+write('Generated '), write(C), write(' clauses over '), write(N), write(' variables. '),nl,
+shell('cat header clauses > infile.cnf',_),
+write('Calling solver....'), nl,
+shell('picosat -v -o model infile.cnf', Result),  % if sat: Result=10; if unsat: Result=20.
 	treatResult(Result),!.
 
 treatResult(20):- write('Unsatisfiable'), nl, halt.
 treatResult(10):- write('Solution found: '), nl, see(model), symbolicModel(M), seen, displaySol(M), nl,nl,halt.
 
 initClauseGeneration:-  %initialize all info about variables and clauses:
-    retractall(numClauses(   _)), 
-    retractall(numVars(      _)), 
-    retractall(varNumber(_,_,_)),
-    assert(numClauses( 0 )), 
-    assert(numVars(    0 )),     !.
+	retractall(numClauses(   _)),
+	retractall(numVars(      _)),
+	retractall(varNumber(_,_,_)),
+	assert(numClauses( 0 )),
+	assert(numVars(    0 )),     !.
 
 writeClause([]):- symbolicOutput(1),!, nl.
 writeClause([]):- countClause, write(0), nl.
@@ -138,7 +136,7 @@ writeHeader:- numVars(N),numClauses(C), write('p cnf '),write(N), write(' '),wri
 
 countClause:-     retract( numClauses(N0) ), N is N0+1, assert( numClauses(N) ),!.
 newVarNumber(N):- retract( numVars(   N0) ), N is N0+1, assert(    numVars(N) ),!.
- 
+
 % Getting the symbolic model M from the output file:
 symbolicModel(M):- get_code(Char), readWord(Char,W), symbolicModel(M1), addIfPositiveInt(W,M1,M),!.
 symbolicModel([]).
