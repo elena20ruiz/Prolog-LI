@@ -116,72 +116,68 @@ atMostKPieces(K):-
 
 atMostKPieces(_).
 
-%Dada una pieza P
-% si la pieza es usada, como maximo tiene un start.
+
 atMostOneStartP:-
-        piece(P),
-        findall(pieceStarts-P-X-Y,cell(X,Y), Lits),
-        atMost(1,Lits),
-        fail.
+								piece(P),
+								findall(pieceStarts-P-X-Y ,cell(X,Y),Lits),
+								atMost(1,Lits),
+								fail.
 atMostOneStartP.
 
-ifHasStartUsedP:-
-        piece(P),
-        cell(X,Y),
-        writeClause([pieceStarts-P-X-Y, \+used-P]),
-        fail.
-ifHasStartUsedP.
+ifusedPHasStart :-
+								piece(P),
+								cell(X,Y),
+								writeClauses([pieceStarts-P-X-Y, \+used-P]),
+								fail.
+ifusedPHasStart.
 
-%En toda posicion X,Y si hay una X ha de haber una pieza
 allXCellsExactlyOnePiece:-
-       contentsCellBanner(X,Y,_),
-       findall(pieceCell-P-X-Y,piece(P),Lits),
-       exactly(1,Lits),
-       fail.
+								contentsCellBanner(X,Y,"x"),
+								findall(pieceCell-P-X-Y,piece(P), Lits),
+								exactly(1,Lits),
+								fail.
 allXCellsExactlyOnePiece.
 
+fillCells :-
+					piece(P),
+					cell(X,Y),
+					pieceSize(P,W,H),
+					X1 is X + W,
+					Y1 is Y + H,
+					between(X,X1,Xi),
+					between(Y,Y1,Yi),
+					cell(Xi,Yi),
+					writeClauses([\+pieceStarts-P-X-Y,\+rotated-P,pieceCell-P-Xi-Yi]),
+					fail.
 
-%Si tiene un comienzo
-%y no esta rotado
-%llenar
-fillCells:-
-    piece(P),
-    pieceSize(P,W,H),
-    cell(X,Y),
-    X1 is X + W,
-    Y1 is Y + H,
-    between(X,X1,Xf),
-    between(Y,Y1,Yf),
-    writeClause([\+pieceStarts-P-X-Y, rotated-P,pieceCell-P-Xf-Yf]),
-    fail.
-
-%Si tiene un comienzo
-%y esta rotado
-%llenar al revés
-fillCells:-
-    piece(P),
-    pieceSize(P,W,H),
-    cell(X,Y),
-    X1 is X + H,
-    Y1 is Y + W,
-    between(X,X1,Xf),
-    between(Y,Y1,Yf),
-    writeClause([\+pieceStarts-P-X-Y, \+rotated-P,pieceCell-P-Xf-Yf]),
-    fail.
+fillCells :-
+					piece(P),
+					cell(X,Y),
+					pieceSize(P,W,H),
+					X1 is X + H,
+					Y1 is Y + W,
+					between(X,X1,Xi),
+					between(Y,Y1,Yi),
+					cell(Xi,Yi),
+					writeClauses([\+pieceStarts-P-X-Y,rotated-P,pieceCell-P-Xi-Yi]),
+					fail.
 fillCells.
+
 
 
 %% ----------------------------------------------------------------------------
 
-
-% Should be completed
-% Write clauses imposing also that at most K pieces can be used
 writeClauses(K):-
     atMostKPieces(K),
-    atMostOneStartP,
-    ifHasStartUsedP,
-    allXCellsExactlyOnePiece,
-    fillCells,
+    atMostOneStartP, 						% cada pieza como mucho 1 start
+    ifusedPHasStart,						% si se usa la pieza tiene un start
+    allXCellsExactlyOnePiece,		% para cada XY exactamente una pieza
+    fillCells,									% introducir las piezas:
+		 														% Si no se rota:
+															  %    Para cada X+W y Y+H introducir pieza
+																% Si se rota
+																%    Para cada X+H y Y+W introducir pieza
+
     true,!.
 
 % SHOULD BE MODIFIED!!!!

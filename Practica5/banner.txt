@@ -1,13 +1,4 @@
 
-- Cada celda como mucho se ocupara una vez
-- Cada pieza se usa como máximo una vez.
-- Si la pieza se usa, todos sus componentes han de ser usados.
-- Si la pieza se usa, exactamente tiene que tener un start.
-
-
-
-
-
 % You can use the following types of symbolic propositional variables:
 %   1. pieceCell-P-X-Y means:   "piece P fills cell [X,Y]" (note: [1,1] is the bottom-left cell of the banner (Careful: Mandatory variable. Otherwise, displaySol will not work)
 %   2. rotated-P means:         "piece P is rotated"
