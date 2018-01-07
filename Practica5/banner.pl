@@ -73,136 +73,175 @@ cell(X,Y):-                 widthBanner(W), heightBanner(H), between(1,W,X), bet
 % Should be completed
 % Write clauses imposing also that at most K pieces can be used
 writeClauses(K):-
-	% eachCellOnePiece,
-	piecesStartsAtMostOne,
-	everyXhasOnePiece,
-	everyPhasNoPiece,
-	everyPhasNoStart,
-	% eachPieceNpUsedOrRotatedOrNoRotated,
 
-	ifStartsCellNoR,
-	ifStartsCellR,
+	atMostKPieces(K),
 
-	ifAnyUsed,
-	ifUsedStarts,
+	% About cell
+	eachXCellExactlyOneP, 			% Cada XY con 'x' exactamente una pieza P
+	eachPCellExactlyZeroP,			% Cada XY con '.' exactamente zero pieza P
+	eachPCellExactlyZeroStartP, % Cada XY con '.' exactamente zero start S
+	eachPAtMostOneStart,			  % Cada pieza P atMost un START
 
-	ifNoPossNoStartANDnoRotate,
-	ifNoPossNoStartANDrotate,
+	ifNoPieceCellNoUsed,				% Si no hay start no de usa
+	ifStartPIsUsed,							% Si se usa hay start
 
-	everyNoPieceNoRotatedX1,
-	everyNoPieceNoRotatedX2,
-	everyNoPieceNoRotatedY1,
-	everyNoPieceNoRotatedY2,
-	everyNoPieceRotatedX1,
-	everyNoPieceRotatedX2,
-	everyNoPieceRotatedY1,
-	everyNoPieceRotatedY2,
+	notStartPNROutOfRange,			% Si comienza en XY no  dejar sin rotar (porque no cabe)
+	notStartPROutOfRange,				% Si comienza en XY no rotar (porque no cabe)
 
-	atmostK(K),
+	cantFillXNoR,								% No FILL en X si no rotado y fuera de rango
+	cantFillYNoR,								% No FIIL en Y si no rotado y fuera de rango
+
+	cantFillXR,									% No FILL en X si rotado y fuera de rango
+	cantFillYR,									% No FILL en Y si rotado y fuera de rango
+
+
+	fillPieceNR,						% Fill cell NR piece
+	fillPieceR,							% Fill cell R piece
+
 	true,!.
 
 
-eachCellOnePiece:-
-	cell(X, Y), findall(pieceCell-P-X-Y, piece(P), Lits), atMost(1, Lits), fail.
-eachCellOnePiece.
 
-piecesStartsAtMostOne:-
-	piece(P), findall(pieceStarts-P-X-Y, cell(X, Y), Lits), atMost(1, Lits), fail.
-piecesStartsAtMostOne.
+eachXCellExactlyOneP:-		% Cada XY con 'x' exactamente una pieza P
+	contentsCellBanner(X, Y, 'x'),
+	findall(pieceCell-P-X-Y, piece(P), Lits),
+	exactly(1, Lits),
+	fail.
+eachXCellExactlyOneP.
 
-everyXhasOnePiece:-
-	cell(X, Y), contentsCellBanner(X, Y, 'x'), findall(pieceCell-P-X-Y, piece(P), Lits), exactly(1, Lits), fail.
-everyXhasOnePiece.
+eachPCellExactlyZeroP:-   % Cada XY con '.' exactamente zero pieza P
+	contentsCellBanner(X, Y, '.'),
+	findall(pieceCell-P-X-Y, piece(P), Lits),
+	exactly(0, Lits),
+	fail.
+eachPCellExactlyZeroP.
 
-everyPhasNoPiece:-
-	cell(X, Y), contentsCellBanner(X, Y, '.'), piece(P), writeClause([\+pieceCell-P-X-Y]), fail.
-everyPhasNoPiece.
+eachPCellExactlyZeroStartP:-
+	contentsCellBanner(X, Y, '.'),
+	findall(pieceStarts-P-X-Y, piece(P), Lits),
+	exactly(0, Lits),
+	fail.
+eachPCellExactlyZeroStartP.
 
-everyPhasNoStart:-
-	cell(X, Y), contentsCellBanner(X, Y, '.'), piece(P), writeClause([\+pieceStarts-P-X-Y]), fail.
-everyPhasNoStart.
+eachPAtMostOneStart:-
+	piece(P),
+	findall(pieceStarts-P-X-Y, cell(X, Y), Lits),
+	atMost(1, Lits),
+	fail.
+eachPAtMostOneStart.
 
+fillPieceNR:-
+	piece(P),
+	cell(X, Y),
+	pieceSize(P, W, H),
+	X1 is X + W - 1,
+	Y1 is Y + H - 1,
+	cell(X1, Y1),
+	cell(Xi, Yi),
+	between(X,X1,Xi),
+	between(Y,Y1,Yi),
+	writeClause([\+pieceStarts-P-X-Y, rotated-P, pieceCell-P-Xi-Yi]),
+	fail.
+fillPieceNR.
 
-eachPieceNpUsedOrRotatedOrNoRotated:- piece(P), writeClause([\+used-P, rotated-P, \+rotated-P]), fail.
-eachPieceNpUsedOrRotatedOrNoRotated.
-
-
-ifStartsCellNoR:-
-	piece(P), cell(SX, SY), pieceSize(P, W, H), FX is SX+W-1, FY is SY+H-1, cell(FX, FY), cell(X, Y), X >= SX, X =< FX, Y >= SY, Y =< FY, writeClause([\+pieceStarts-P-SX-SY, rotated-P, pieceCell-P-X-Y]), fail.
-ifStartsCellNoR.
-
-ifStartsCellR:-
-	piece(P), cell(SX, SY), pieceSize(P, H, W), FX is SX+W-1, FY is SY+H-1, cell(FX, FY), cell(X, Y), X >= SX, X =< FX, Y >= SY, Y =< FY, writeClause([\+pieceStarts-P-SX-SY, \+rotated-P, pieceCell-P-X-Y]), fail.
-ifStartsCellR.
-
-
-
-ifNoPossNoStartANDnoRotate:-
-	piece(P), cell(SX, SY), pieceSize(P, W, H), FX is SX+W-1, FY is SY+H-1, not(cell(FX, FY)), writeClause([rotated-P, \+pieceStarts-P-SX-SY]), fail.
-ifNoPossNoStartANDnoRotate.
-
-ifNoPossNoStartANDrotate:-
-	piece(P), cell(SX, SY), pieceSize(P, H, W), FX is SX+W-1, FY is SY+H-1, not(cell(FX, FY)), writeClause([\+rotated-P, \+pieceStarts-P-SX-SY]), fail.
-ifNoPossNoStartANDrotate.
-
-
-
-
-
-ifAnyUsed:-
-	piece(P), cell(X, Y), writeClause([\+pieceCell-P-X-Y, used-P]), fail.
-ifAnyUsed.
-
-startingCell(P, SX, SY):- cell(SX, SY), pieceSize(P, H, W), FX is SX+W-1, FY is SY+H-1, cell(FX, FY).
-startingCell(P, SX, SY):- cell(SX, SY), pieceSize(P, W, H), FX is SX+W-1, FY is SY+H-1, cell(FX, FY).
-
-ifUsedStarts:-
-	piece(P), findall(pieceStarts-P-X-Y, startingCell(P, X, Y), Lits), writeClause([\+used-P|Lits]), fail.
-ifUsedStarts.
-
-ifNoUsedNoStarts:-
-	piece(P), cell(X, Y), writeClause([used-P, \+pieceStarts-P-X-Y]), fail.
-ifNoUsedNoStarts.
+fillPieceR:-
+	piece(P),
+	cell(X, Y),
+	pieceSize(P, W, H),
+	X1 is X + H - 1,
+	Y1 is Y + W - 1,
+	cell(X1, Y1),
+	cell(Xi, Yi),
+	between(X,X1,Xi),
+	between(Y,Y1,Yi),
+	writeClause([\+pieceStarts-P-X-Y, \+rotated-P, pieceCell-P-Xi-Yi]),
+	fail.
+fillPieceR.
 
 
-everyNoPieceNoRotatedX1:-
-	piece(P), cell(SX, SY), cell(X, Y), X < SX, writeClause([\+pieceStarts-P-SX-SY, rotated-P, \+pieceCell-P-X-Y]), fail.
-everyNoPieceNoRotatedX1.
+ifNoPieceCellNoUsed:-   %Si no se usa en ningu XY no se usa P
+	piece(P),
+	cell(X, Y),
+	writeClause([\+pieceCell-P-X-Y, used-P]),
+	fail.
+ifNoPieceCellNoUsed.
 
-everyNoPieceNoRotatedX2:-
-	piece(P), cell(SX, SY), pieceSize(P, W, _), FX is SX+W-1, cell(X, Y), X > FX, writeClause([\+pieceStarts-P-SX-SY, rotated-P, \+pieceCell-P-X-Y]), fail.
-everyNoPieceNoRotatedX2.
-
-everyNoPieceNoRotatedY1:-
-	piece(P), cell(SX, SY), cell(X, Y), Y < SY, writeClause([\+pieceStarts-P-SX-SY, rotated-P, \+pieceCell-P-X-Y]), fail.
-everyNoPieceNoRotatedY1.
-
-everyNoPieceNoRotatedY2:-
-	piece(P), cell(SX, SY), pieceSize(P, _, H), FY is SY+H-1, cell(X, Y), Y > FY, writeClause([\+pieceStarts-P-SX-SY, rotated-P, \+pieceCell-P-X-Y]), fail.
-everyNoPieceNoRotatedY2.
+ifStartPIsUsed:-
+	piece(P),
+	findall(pieceStarts-P-X-Y, cell(X,Y), Lits),
+	writeClause([\+used-P|Lits]),
+	fail.
+ifStartPIsUsed.
 
 
+notStartPNROutOfRange:-
+	piece(P),
+	cell(X, Y),
+	pieceSize(P, W, H),
+	X1 is X + W - 1,
+	Y1 is Y + H - 1,
+	\+cell(X1, Y1),
+	writeClause([\+pieceStarts-P-X-Y,rotated-P]),
+	fail.
+notStartPNROutOfRange.
 
-everyNoPieceRotatedX1:-
-	piece(P), cell(SX, SY), cell(X, Y), X < SX, writeClause([\+pieceStarts-P-SX-SY, \+rotated-P, \+pieceCell-P-X-Y]), fail.
-everyNoPieceRotatedX1.
-
-everyNoPieceRotatedX2:-
-	piece(P), cell(SX, SY), pieceSize(P, _, W), FX is SX+W-1, cell(X, Y), X > FX, writeClause([\+pieceStarts-P-SX-SY, \+rotated-P, \+pieceCell-P-X-Y]), fail.
-everyNoPieceRotatedX2.
-
-everyNoPieceRotatedY1:-
-	piece(P), cell(SX, SY), cell(X, Y), Y < SY, writeClause([\+pieceStarts-P-SX-SY, \+rotated-P, \+pieceCell-P-X-Y]), fail.
-everyNoPieceRotatedY1.
-
-everyNoPieceRotatedY2:-
-	piece(P), cell(SX, SY), pieceSize(P, H, _), FY is SY+H-1, cell(X, Y), Y > FY, writeClause([\+pieceStarts-P-SX-SY, \+rotated-P, \+pieceCell-P-X-Y]), fail.
-everyNoPieceRotatedY2.
+notStartPROutOfRange:-
+	piece(P),
+	cell(X, Y),
+	pieceSize(P, W, H),
+	X1 is X + H - 1,
+	Y1 is Y + W - 1,
+	\+cell(X1, Y1),
+	writeClause([\+pieceStarts-P-X-Y,\+rotated-P]),
+	fail.
+notStartPROutOfRange.
 
 
+cantFillXNoR :-				% Si comienza en X ,Y no puede estar en X fuera de rango
+	pieceSize(P,W,H),
+	cell(X,Y),
+	X1 is X + W - 1,
+	cell(Xi,Yi),
+	\+between(X,X1,Xi),
+	writeClause([\+pieceStarts-P-X-Y, rotated-P, \+pieceCell-P-Xi-Yi]),
+	fail.
+cantFillXNoR.
 
-atmostK(K):-
-	findall(used-P, piece(P), Lits), atMost(K, Lits).
+cantFillYNoR:-
+	pieceSize(P,_,H),
+	cell(X,Y),
+	Y1 is Y + H - 1,
+	cell(Xi,Yi),
+	\+between(Y,Y1,Yi),
+	writeClause([\+pieceStarts-P-X-Y,rotated-P, \+pieceCell-P-Xi-Yi]),
+	fail.
+cantFillYNoR.
+
+cantFillXR:-
+	pieceSize(P,_,H),
+	cell(X,Y),
+	X1 is X + H - 1,
+	cell(Xi,Yi),
+	\+between(X,X1,Xi),
+	writeClause([\+pieceStarts-P-X-Y, \+rotated-P, \+pieceCell-P-Xi-Yi]),
+	fail.
+cantFillXR.
+
+cantFillYR:-
+	pieceSize(P,W,_),
+	cell(X,Y),
+	Y1 is Y + W - 1,
+	cell(Xi,Yi),
+	\+between(Y,Y1,Yi),
+	writeClause([\+pieceStarts-P-X-Y, \+rotated-P, \+pieceCell-P-Xi-Yi]),
+	fail.
+cantFillYR.
+
+atMostKPieces(K):-
+                  findall(used-P,piece(P),Lits),
+                  atMost(K,Lits),
+                  fail.
+atMostKPieces(_).
 
 
 
