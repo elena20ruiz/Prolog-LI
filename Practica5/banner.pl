@@ -169,7 +169,7 @@ ifNoPieceCellNoUsed.
 ifStartPIsUsed:-
 	piece(P),
 	findall(pieceStarts-P-X-Y, cell(X,Y), Lits),
-	writeClause([\+used-P|Lits]),
+	expressOr(used-P, Lits ),
 	fail.
 ifStartPIsUsed.
 

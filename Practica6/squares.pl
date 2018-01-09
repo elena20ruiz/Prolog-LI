@@ -11,17 +11,44 @@ ejemplo(5,175,[81,64,56,55,51,43,39,38,35,33,31,30,29,20,18,16,14,9,8,5,4,3,2,1]
 main:-
     ejemplo(3,Big,Sides),
     nl, write('Fitting all squares of size '), write(Sides), write(' into big square of size '), write(Big), nl,nl,
-    length(Sides,N),
-    length(RowVars,N), % get list of N prolog vars: Row coordinates of each small square
+
+    length(Sides,N),        % Getting N
+    length(RowVars,N),      % get list of N prolog vars: Row coordinates of each small square
+    length(ColVars,N),      % N:
+
+
+    RowVars ins 1..Big,
+    ColVars ins 1..Big,
+
     insideBigSquare(N,Big,Sides,RowVars),
     insideBigSquare(N,Big,Sides,ColVars),
+
     nonoverlapping(N,Sides,RowVars,ColVars),
+
+    label(Vars),
+    append(RowVars,ColVars,Vars),
+
     displaySol(N,Sides,RowVars,ColVars), halt.
 
 
 %%------------------------------------------------------------------------------
-insideBigSquare(N,Big,Sides,RowVars).
-nonoverlapping(N,Sides,RowVars,ColVars).
+
+insideBigSquare(N,Big,[S|Sides],[V|Vars]) :-
+  V + S - 1 #=< Big, insideBigSquare(N, Big, Sides, Vars).
+
+nonoverlapping(1,_,_,_):- !.
+nonoverlapping(N,[S|Sides],[R|RowVars],[C|ColVars]):- %Va poniendo Cada S
+  mapNoOverlapping(S,R,C,Sides,RowVars,ColVars),
+  N1 is N - 1,
+  nonoverlapping(N1,Sides,RowVars,ColVars).
+
+mapNoOverlapping(_,_,_,[],[],[])
+mapNoOverlapping(S,R,C,[S1|Sides],[R1|RowVars],[C1|ColVars]) :-
+  R1 #>= R + S #\/
+  R1 + S1 #=< R #\/
+  C1 #>= C + S #\/
+  C1 + S1 #=< C,
+  squareRCSnoOverlapsL(S, R, C, Sides, RowVars, ColVars).
 
 %%-------------------------------------------------------------------------------
 
