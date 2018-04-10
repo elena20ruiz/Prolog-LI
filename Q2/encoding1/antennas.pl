@@ -20,29 +20,29 @@
 
 maxStations(8).
 numStations(20).
-city(1,[12,8,1,5,6,9]).
-city(2,[6,14,17,10,2]).
-city(3,[12,8,2]).
-city(4,[5,20,16]).
-city(5,[19,11,12,2,1]).
+city(1,[12,8,1,5,6,9]). 
+city(2,[6,14,17,10,2]). 
+city(3,[12,8,2]).      
+city(4,[5,20,16]).      
+city(5,[19,11,12,2,1]). 
 city(6,[16,10,3,5,13]).
-city(7,[5,13,19]).
-city(8,[17,14,15,8,5]).
-city(9,[13,14,6,11,19]).
-city(10,[5,10,19]).
-city(11,[1,5,8]).
-city(12,[12,20,18,7]).
-city(13,[7,3,16]).
-city(14,[15,3,10,17]).
-city(15,[8,3,1]).
-city(16,[18,1,7]).
-city(17,[10,5,19]).
-city(18,[7,19,8,1,4]).
-city(19,[17,9,20,7,13]).
-city(20,[14,10,19]).
-city(21,[6,5,3,15,19,20]).
-city(22,[16,20,15,17]).
-city(23,[17,6,20]).
+city(7,[5,13,19]).      
+city(8,[17,14,15,8,5]). 
+city(9,[13,14,6,11,19]). 
+city(10,[5,10,19]).    
+city(11,[1,5,8]).      
+city(12,[12,20,18,7]).  
+city(13,[7,3,16]).    
+city(14,[15,3,10,17]).  
+city(15,[8,3,1]).     
+city(16,[18,1,7]).   
+city(17,[10,5,19]).   
+city(18,[7,19,8,1,4]). 
+city(19,[17,9,20,7,13]). 
+city(20,[14,10,19]).  
+city(21,[6,5,3,15,19,20]). 
+city(22,[16,20,15,17]). 
+city(23,[17,6,20]).   
 city(24,[17,16,8,13,12,19]).
 city(25,[8,11,5,2,6]).
 city(26,[12,8,19]).
@@ -78,10 +78,23 @@ importantCities([1,5,10,20]).
 symbolicOutput(0). % set to 1 to see symbolic output only; 0 otherwise.
 
 %auxiliar
+
+contains(L,[L|_]).
+contains(L, [_|List]):- contains(L,List).
+
 station(S) :- numStations(N), between(1,N,S).
+city(C) :- city(C,_), importantCities(L), \+contains(C,L).
+
+importantCity(C) :- city(C,_), importantCities(L), contains(C,L).
+containsInCity(C,L) :- city(C,List), contains(L, List).
+
+
 
 
 writeClauses:-
+    atMostMaxStations,
+    eachImportantCityAtLeastTwoStation,
+    eachNotImportantCityAtLeastOneStation,
     true.
 	   
 %% AtMost maxStations are used.
@@ -91,7 +104,22 @@ atMostMaxStations:-
     atMost(M,Lits),
     fail.
 atMostMaxStations.
+
+%% EachImportantCityAtLeastOneStations
     
+eachImportantCityAtLeastTwoStation:-
+    importantCity(C),
+    findall(used-S,containsInCity(C,S), Lits),
+    atLeast(2,Lits), 
+    fail.
+eachImportantCityAtLeastTwoStation.
+  
+eachNotImportantCityAtLeastOneStation:-
+    city(C),
+    findall(used-S,containsInCity(C,S), Lits),
+    atLeast(1,Lits),
+    fail.
+eachNotImportantCityAtLeastOneStation.
 	   
 
 %% Display solution
