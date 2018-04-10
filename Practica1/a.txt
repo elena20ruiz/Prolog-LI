@@ -1,0 +1,4 @@
+Satisfactible
+Temps total: 13.2566
+Nombre nDecisions: 0
+Nombre propagacions/segon: 1.97964e+06
