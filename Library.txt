@@ -1,0 +1,156 @@
+
+## CONSTRAINS -----------------------------------------------------------------
+-------------------------------------------------------------------------------
+
+## CONSTRAINS ARITMETICAS
+
+Expr1 #= Expr2	Expr1 equals Expr2
+Expr1 #\= Expr2	Expr1 is not equal to Expr2
+Expr1 #>= Expr2	Expr1 is greater than or equal to Expr2
+Expr1 #=< Expr2	Expr1 is less than or equal to Expr2
+Expr1 #> Expr2	Expr1 is greater than Expr2
+Expr1 #< Expr2	Expr1 is less than Expr2
+
+## EXPRESIONES ARITMETICAS
+
+integer	          Given value
+variable	        Unknown integer
+?(variable)	      Unknown integer
+
+-Expr	Unary minus
+Expr + Expr	      Addition
+Expr * Expr	      Multiplication
+Expr - Expr	      Subtraction
+Expr ^ Expr	      Exponentiation
+min(Expr,Expr)	  Minimum of two expressions
+max(Expr,Expr)	  Maximum of two expressions
+Expr mod Expr	    Modulo induced by floored division
+Expr rem Expr	    Modulo induced by truncated division
+abs(Expr)	        Absolute value
+Expr // Expr	    Truncated integer division
+Expr div Expr	    Floored integer division
+
+## IMPLICACIONES
+
+#\ Q	    True iff  Q is false
+P #\/ Q	  True iff  either P or Q (OR)
+P #/\ Q	  True iff  both P and Q  (AND)
+P #\ Q	  True iff  either P or Q, but not both (OR EXCLUSIVA)
+P #<==> Q	True iff  P and Q are equivalent
+P #==> Q	True iff  P implies Q
+P #<== Q	True iff  Q implies P
+
+
+## DOMINIOS --------------------------------------------------------------------
+--------------------------------------------------------------------------------
+
+# 1. Definir un rango:
+
+V ins 1..9
+V ins 1..sup          % Infinito positivo
+V ins 1..9 \/ 11..20  % Union de dominios
+
+## FUNCIONES INTERESANTES ------------------------------------------------------
+--------------------------------------------------------------------------------
+
+- element(?N, +Vs, ?V) :: elemen(I, Vi, V). % Vi es el elemento I de V
+
+- sum(+Vars, +Rel, ?Expr) :: sum([A,B,C], #=, 100). % A + B + C = 100
+
+- scalar_product(+Cs, +Vs, +Rel, ?Expr) ::
+                  scalar_product( [C1,C2], [V1,V2], #=, 100) % C1*V1 + C2*V2 = 100
+
+- tuples_in(+Tuples, +Relation) ::
+                   tuples_in([[X,Y]], [[1,2],[1,5],[4,0],[4,3]]), X = 4.
+                   % Te devuelve el valor que puede tener Y.
+
+-  maplist(all_distinct, Rows)  %Unifica dos matrices
+
+-  transpose(ByRows, ByColumns) %Transpone una matriz
+
+- all_distinct([N1,N2,N3,N4,N5,N6,N7,N8,N9]) %Dado una lista te incluye valores distintos
+
+- cumulative(+Tasks, +Options) :: EJEMPLO
+
+      ?- tasks_starts(Tasks, Starts), Starts ins 0..10,
+         cumulative(Tasks, [limit(2)]), label(Starts).
+      Tasks = [task(0, 3, 3, 1, _G36), task(0, 2, 2, 1, _G45), ...],
+      Starts = [0, 0, 2] .
+
+- ?- chain([X,Y,Z], #>=).
+        X#>=Y,
+        Y#>=Z.
+
+## OPCIONES DE LABELING---------------------------------------------------------
+-------------------------------------------------------------------------------
+
+[leftmost] ----- Asignar en el orden en que estan en Vars
+
+[ff] ----------- Etiqueta la variable a la izquierda con el dominio mas pequeño.
+
+[ffc]----------- De las variables con dominios más pequeños,
+                 la más a la izquierda que participa en la mayoría de las
+                 restricciones se etiqueta a continuación.
+
+[min] ---------- Intenta que los valores de la entrada del label sean min
+
+[max] ---------- Intenta que los valores de la entrada del label sean max
+
+[up] ----------- Se intenta generar los valores de forma creciente
+
+[down]---------- Sen intenta generas los valores de forma decreciente
+
+[step]----------- For each variable X, a choice is made between X = V and X #\= V,
+                  where V is determined by the value ordering options.
+                  This is the default.
+
+[enum]----------- For each variable X, a choice is made between X = V_1, X = V_2 etc.,
+                  for all values V_i of the domain of X. The order is determined
+                  by the value ordering options.
+
+[bisect]--------- For each variable X, a choice is made between X #=< M and X #> M,
+                  where M is the midpoint of the domain of X.
+
+## EJEMPLOS
+
+positive_integer(N) :- N #>= 1.
+
+n_factorial(0, 1).
+n_factorial(N, F) :-
+        N #> 0,
+        N1 #= N - 1,
+        n_factorial(N1, F1),
+        F #= N * F1.
+
+
+n_queens(N, Qs) :-
+        length(Qs, N),  % Define vector Qs de N variables
+        Qs ins 1..N,    % Define dominio de Qs
+        safe_queens(Qs).  %Reflica las constrains
+
+safe_queens([]).
+safe_queens([Q|Qs]) :-
+  safe_queens(Qs, Q, 1), %Caso individual
+  safe_queens(Qs).       %Recursividad
+
+safe_queens([], _, _).
+safe_queens([Q|Qs], Q0, D0) :-
+        Q0 #\= Q,                   % No misma fila
+        abs(Q0 - Q) #\= D0,         % No misma diagonal
+        D1 #= D0 + 1,               % No misma columna
+        safe_queens(Qs, Q0, D1).
+
+
+trains([[1,2,0,1],
+        [2,3,4,5],
+        [2,3,0,1],
+        [3,4,5,6],
+        [3,4,2,3],
+        [3,4,8,9]]).
+
+threepath(A, D, Ps) :-
+        Ps = [[A,B,_T0,T1],[B,C,T2,T3],[C,D,T4,_T5]],
+        T2 #> T1,
+        T4 #> T3,
+        trains(Ts),
+        tuples_in(Ps, Ts).

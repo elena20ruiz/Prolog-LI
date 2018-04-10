@@ -1,0 +1,9 @@
+c PicoSAT SAT Solver Version 960
+c Copyright (c) 2006 - 2014 Armin Biere JKU Linz
+c gcc -Wall -Wextra -DNDEBUG -O3
+c
+c using 2 as default phase
+c
+c parsing infile.cnf
+c parsed header 'p cnf 0 0'
+infile.cnf:2: expected number
