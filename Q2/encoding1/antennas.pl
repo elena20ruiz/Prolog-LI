@@ -1,4 +1,11 @@
 
+%% Se han de cubrir todas las ciudades con antenas
+%% Cada ciudad tiene una lista de posibles estaciones que les puede llegar la señal.
+%% Cada ciudad como minimo ha de ser cubierta por una antena.
+%% Cada ciudad importante como minimo ha de ser cubierta por dos antenas.
+%% Pero como maximo podemos utilitzar maxStations.
+
+
 % The Swiss Telephone Company (STC) needs to place new 5G antenna
 % stations to cover ALL cities of Switzerland.  STC has a long list of
 % possible antenna stations. Each city has a (non-empty) list of
@@ -70,9 +77,23 @@ importantCities([1,5,10,20]).
 :-dynamic(varNumber/3).
 symbolicOutput(0). % set to 1 to see symbolic output only; 0 otherwise.
 
+%auxiliar
+station(S) :- numStations(N), between(1,N,S).
+
+
 writeClauses:-
     true.
 	   
+%% AtMost maxStations are used.
+atMostMaxStations:-
+    maxStations(M),
+    findall(used-S, station(S), Lits),
+    atMost(M,Lits),
+    fail.
+atMostMaxStations.
+    
+	   
+
 %% Display solution
 displaySol(M):- findall( S, member(used-S,M), L), sort(L,L1), length(L1,K),
 		nl, write(K), write(' antenna stations: '),		
